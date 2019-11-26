@@ -1,4 +1,5 @@
 import os
+import os.path as pt
 import zipfile
 import pathlib
 import sys
@@ -16,8 +17,7 @@ import sys
 пользователь через консоль запускает программу в формате 
 awCVS [init, commit, checkout(следующий аргумент номер версии)] имя_директории, которую сохраняем
 парсим аргументы командной строки, в директории ищем папку .aw, если ее нет, то создаем, в ней адрес репозитория, 
-"""
-"""
+
 Консольная версия
 1. Реализация на основе [что-то одно]:
     Хранение файлов
@@ -34,27 +34,28 @@ awCVS [init, commit, checkout(следующий аргумент номер в�
 """
 
 
-CVS_DIR_NAME = '\\.aw'
-CVS_REPOS_INFO = '\\info.txt'
+CVS_DIR_NAME = '.aw'
+CVS_REPOS_INFO = 'info.txt' # сюда пишется адрес репозитория? он ведь локальный!!!
+CVS_REPOS_INDEX = 'index.txt'
 
+def init(directory):
 
-def init(directory, repository):
-    # Директория должна быть равна репозиторию?
-    # Репозиторий .aw?
     """ Создает папку .aw в директории, с которой будем работать,
         записываем  """
-    info_dir = directory + CVS_DIR_NAME
-    pathlib.Path(info_dir).mkdir(exist_ok = True)
-    with open(info_dir + CVS_REPOS_INFO, 'w') as f:
-        f.write(repository)
+    info_dir = pt.join(directory, CVS_DIR_NAME)
+    os.mkdir(info_dir)
+    with open(pt.join(info_dir, CVS_REPOS_INFO), 'w') as f:
+        f.write(info_dir)
     print("initiated")
 
 
-def add(file_path):
-    """Добавляет файл в отслеживаемые(индексируемые)"""
-
-    with open(file_path, 'w') as index:
-        pass
+def add(path):
+    """Добавляет файл/ директорию в отслеживаемые(индексируемые)
+    На данный момент дописывает название в index.txt, чтобы commit знал, какие файлы сохранять"""
+    print(pt.dirname(path))
+    index_addr = pt.join(pt.dirname(path), CVS_DIR_NAME, CVS_REPOS_INDEX)
+    with open(index_addr, 'a', encoding = 'UTF-8') as index:
+        index.write(path + '\n')
 
 def commit(directory):
     """Сейчас: Сохраняем ВСЮ директорию
@@ -65,7 +66,7 @@ def commit(directory):
     with open(info_file, 'r') as f:
         repos_address = f.read()
 
-    dir_name = "\\"+str(pathlib.Path(directory).name)
+    dir_name = "\\" + str(pathlib.Path(directory).name)
 
     walk = os.walk(directory)
     with zipfile.ZipFile(repos_address + dir_name + '.zip', mode='w') as zp:
@@ -76,7 +77,7 @@ def commit(directory):
     print('SUCCESS')
 
 def diff():
-
+    pass
 
 def reset():
     pass
@@ -89,7 +90,7 @@ def log():
 def main():
     # print(functions)
     functions[sys.argv[1]](*sys.argv[2:])
-
+    # print('done')
 
 functions = {
     "init": init,
@@ -100,3 +101,4 @@ functions = {
 }
 
 main()
+
