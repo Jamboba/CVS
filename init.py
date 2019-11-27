@@ -5,6 +5,8 @@ import pathlib
 import sys
 
 
+
+
 # TODO: Реализовать локальную систему контроля версий с базовыми операциями (init, add, commit, reset, log)
 
 
@@ -37,25 +39,24 @@ awCVS [init, commit, checkout(следующий аргумент номер в�
 CVS_DIR_NAME = '.aw'
 CVS_REPOS_INFO = 'info.txt' # сюда пишется адрес репозитория? он ведь локальный!!!
 CVS_REPOS_INDEX = 'index.txt'
+CVS_DIR_OBJ_NAME = 'objects'
 
-def init(directory):
+def init():
 
     """ Создает папку .aw в директории, с которой будем работать,
         записываем  """
-    info_dir = pt.join(directory, CVS_DIR_NAME)
-    os.mkdir(info_dir)
-    with open(pt.join(info_dir, CVS_REPOS_INFO), 'w') as f:
-        f.write(info_dir)
+    os.mkdir(CVS_DIR_NAME)
+    object_dir = pt.join(CVS_DIR_NAME, CVS_DIR_OBJ_NAME)
+    os.mkdir(object_dir)
     print("initiated")
 
 
 def add(path):
-    """Добавляет файл/ директорию в отслеживаемые(индексируемые)
-    На данный момент дописывает название в index.txt, чтобы commit знал, какие файлы сохранять"""
-    print(pt.dirname(path))
-    index_addr = pt.join(pt.dirname(path), CVS_DIR_NAME, CVS_REPOS_INDEX)
+    """Добавляет файл в индексируемые, сохраняет текущие изменения в папке object"""
+    index_addr = pt.join(CVS_DIR_NAME, CVS_REPOS_INDEX)
     with open(index_addr, 'a', encoding = 'UTF-8') as index:
         index.write(path + '\n')
+    save_obj(path)
 
 def commit(directory):
     """Сейчас: Сохраняем ВСЮ директорию
@@ -86,11 +87,17 @@ def reset():
 def log():
     pass
 
+def save_obj(path):
+    # TODO: Обработка директории
+    # walk = os.walk(directory)
+    splt_path = list(pt.split(path))
+    arch_addr = pt.join(CVS_DIR_NAME, CVS_DIR_OBJ_NAME, '@'.join(splt_path) + '.zip')
+    with zipfile.ZipFile(arch_addr, mode = 'w') as zp:
+                zp.write(path)
+
 
 def main():
-    # print(functions)
     functions[sys.argv[1]](*sys.argv[2:])
-    # print('done')
 
 functions = {
     "init": init,
@@ -101,4 +108,3 @@ functions = {
 }
 
 main()
-
