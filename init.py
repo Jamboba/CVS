@@ -1,9 +1,10 @@
 import os
 import os.path as pt
-import zipfile
 import pathlib
 import sys
-
+import hashlib #
+import zipfile
+import add
 
 
 
@@ -24,12 +25,12 @@ awCVS [init, commit, checkout(следующий аргумент номер в�
 1. Реализация на основе [что-то одно]:
     Хранение файлов
     Хранение диффов 
-2. Реализация базовых операций: init, add, commit, reset, log
-3. добавление файлов/каталогов
-4. коммит изменений
-5. перемещение между версиями
-6. просмотр лога (список изменённых файлов + время)
-7. Теги
+2. Реализация базовых операций: init, add, commit, checkout, reset, log, branch
+3. добавление файлов/каталогов (add) 
+4. коммит изменений (commit)
+5. перемещение между версиями (checkout)
+6. просмотр лога (список изменённых файлов + время) (log)
+7. Теги (tag ???)
 8. Просмотр списка коммитов/тегов для перемещения между ними
 9. Сообщения в коммитах, в тегах
 10. Создание веток и простейшие операции с ними (без слияния)
@@ -42,21 +43,14 @@ CVS_REPOS_INDEX = 'index.txt'
 CVS_DIR_OBJ_NAME = 'objects'
 
 def init():
-
     """ Создает папку .aw в директории, с которой будем работать,
         записываем  """
     os.mkdir(CVS_DIR_NAME)
     object_dir = pt.join(CVS_DIR_NAME, CVS_DIR_OBJ_NAME)
     os.mkdir(object_dir)
-    print("initiated")
-
-
-def add(path):
-    """Добавляет файл в индексируемые, сохраняет текущие изменения в папке object"""
     index_addr = pt.join(CVS_DIR_NAME, CVS_REPOS_INDEX)
-    with open(index_addr, 'a', encoding = 'UTF-8') as index:
-        index.write(path + '\n')
-    save_obj(path)
+    with open(index_addr, 'w', encoding = 'UTF-8'):
+        print("initiated")
 
 def commit(directory):
     """Сейчас: Сохраняем ВСЮ директорию
@@ -87,21 +81,20 @@ def reset():
 def log():
     pass
 
-def save_obj(path):
-    # TODO: Обработка директории
-    # walk = os.walk(directory)
-    splt_path = list(pt.split(path))
-    arch_addr = pt.join(CVS_DIR_NAME, CVS_DIR_OBJ_NAME, '@'.join(splt_path) + '.zip')
-    with zipfile.ZipFile(arch_addr, mode = 'w') as zp:
-                zp.write(path)
+
+def make_tree():
+    """Создает дерево по файлам из индекса"""
+    pass
 
 
 def main():
     functions[sys.argv[1]](*sys.argv[2:])
+    # add.kek();
+
 
 functions = {
     "init": init,
-    "add": add,
+    "add": add.add,
     "commit": commit,
     "reset": reset,
     "log": log
