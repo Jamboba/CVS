@@ -41,6 +41,7 @@ CVS_DIR_NAME = '.aw'
 CVS_REPOS_INFO = 'info.txt' # сюда пишется адрес репозитория? он ведь локальный!!!
 CVS_REPOS_INDEX = 'index.txt'
 CVS_DIR_OBJ_NAME = 'objects'
+CVS_DIR_TEMP = 'tmp'
 
 def init():
     """ Создает папку .aw в директории, с которой будем работать,
@@ -48,6 +49,8 @@ def init():
     os.mkdir(CVS_DIR_NAME)
     object_dir = pt.join(CVS_DIR_NAME, CVS_DIR_OBJ_NAME)
     os.mkdir(object_dir)
+    temp_dir = pt.join(CVS_DIR_NAME,CVS_DIR_TEMP)
+    os.mkdir(temp_dir)
     index_addr = pt.join(CVS_DIR_NAME, CVS_REPOS_INDEX)
     with open(index_addr, 'w', encoding = 'UTF-8'):
         print("initiated")
