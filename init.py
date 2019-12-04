@@ -91,6 +91,7 @@ def make_tree():
 
 
 def main():
+    print('teset')
     functions[sys.argv[1]](*sys.argv[2:])
     # add.kek();
 
