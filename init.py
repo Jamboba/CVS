@@ -4,7 +4,11 @@ import pathlib
 import sys
 import hashlib #
 import zipfile
+
+
+
 import add
+import commit
 
 
 
@@ -42,6 +46,7 @@ CVS_REPOS_INFO = 'info.txt' # сюда пишется адрес репозит�
 CVS_REPOS_INDEX = 'index.txt'
 CVS_DIR_OBJ_NAME = 'objects'
 CVS_DIR_TEMP = 'tmp'
+CVS_IGNORE_FILE = '.awignore.txt'
 
 def init():
     """ Создает папку .aw в директории, с которой будем работать,
@@ -51,28 +56,13 @@ def init():
     os.mkdir(object_dir)
     temp_dir = pt.join(CVS_DIR_NAME,CVS_DIR_TEMP)
     os.mkdir(temp_dir)
+    ignore_adr = pt.join(CVS_DIR_NAME, CVS_IGNORE_FILE)
     index_addr = pt.join(CVS_DIR_NAME, CVS_REPOS_INDEX)
     with open(index_addr, 'w', encoding = 'UTF-8'):
+        pass
+    with open(ignore_adr, 'w', encoding = 'UTF-8'):
         print("initiated")
-
-def commit(directory):
-    """Сейчас: Сохраняем ВСЮ директорию
-        Должно быть: фиксация изменений в проиндексированных(файл index) файлах, если есть флаг -а, то все отслеживаемые(?) на
-        момент коммита"""
-    info_file = directory + CVS_DIR_NAME + CVS_REPOS_INFO
-    repos_address = ""
-    with open(info_file, 'r') as f:
-        repos_address = f.read()
-
-    dir_name = "\\" + str(pathlib.Path(directory).name)
-
-    walk = os.walk(directory)
-    with zipfile.ZipFile(repos_address + dir_name + '.zip', mode='w') as zp:
-        for root, _, files in walk:
-            for file in files:
-                zp.write(root+'\\'+file, (root+'\\'+file)[len(directory):])
-
-    print('SUCCESS')
+    
 
 def diff():
     pass
@@ -91,15 +81,13 @@ def make_tree():
 
 
 def main():
-    print('teset')
     functions[sys.argv[1]](*sys.argv[2:])
-    # add.kek();
 
 
 functions = {
     "init": init,
     "add": add.add,
-    "commit": commit,
+    "commit": commit.commit,
     "reset": reset,
     "log": log
 }

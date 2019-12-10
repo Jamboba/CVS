@@ -5,7 +5,7 @@ import hashlib
 
 
 CVS_DIR_NAME = '.aw'
-CVS_REPOS_INFO = 'info.txt' # сюда пишется адрес репозитория? он ведь локальный!!!
+CVS_REPOS_INFO = 'info.txt'
 CVS_REPOS_INDEX = 'index.txt'
 CVS_DIR_OBJ_NAME = 'objects'
 CVS_BLOB_OBJ = 'blob'
@@ -14,20 +14,28 @@ CVS_DIR_TEMP = 'tmp'
 TXT_EXTENSION = '.txt'
 
 
+""""При добавлении папки объект дерева не создается"""
+
 
 def add(path, typeof = CVS_BLOB_OBJ, dir_path = None):
     """Добавляет файл/директорию в индексируемые, сохраняет текущие изменения в папке object"""
-    print('adding ',path)
+    #print('adding ',path)
     if pt.isdir(path):
         print('it"s directory')
         return add_tree(path)
     index_addr = pt.join(CVS_DIR_NAME, CVS_REPOS_INDEX)
     hash = hash_obj(path)
     save_obj(path,hash)
+
+    """Индекс записывается немного иначе:
+    Когда добавляется папка, в индекс записываются входящие в нее файлы
+    """
     with open(index_addr, 'a', encoding = 'UTF-8') as index:
-    # для дерева в индекс должен записыватся другой путь
+    # деревья в индекс не записываются
         print(f'{typeof} {hash} {path} \n')
-        index.write(f'{typeof} {hash} {dir_path} \n') if dir_path else index.write(f'{typeof} {hash} {path} \n')
+        if not dir_path:
+            # index.write(f'{path} {hash}\n')
+            print(f'{path} {hash}', file=index)
     return typeof, hash, path
     
 
@@ -36,10 +44,10 @@ def save_obj(path, hash):
     """Сохранение файла в репозитории """
 
     splt_path = list(pt.split(path))
-    print('splt_path: \n',splt_path)
+    #print('splt_path: \n',splt_path)
     arch_addr = hash
     arch_addr = [arch_addr[0:2], arch_addr[2:]]
-    print('hashed obj:',arch_addr)
+    #print('hashed obj:',arch_addr)
     arch_addr[0] = pt.join(CVS_DIR_NAME, CVS_DIR_OBJ_NAME, arch_addr[0])
     try:
         os.mkdir(arch_addr[0])
@@ -63,7 +71,7 @@ def hash_obj(path):#(path: str) -> (str,str):
     return sha1.hexdigest()
 
 
-def add_tree(path):
+def add_tree(path, commit=False):
     """Разбираем содержимое директории рекурсивно"""
  #   print('adding dir', path)
     objects = os.listdir(path)
@@ -78,7 +86,9 @@ def add_tree(path):
         else: 
         #    print('it"s file, add file')
             inner_files[fullpath] = add(fullpath) # возвращается кортеж type, hash, path (blob, 4g343gddsserthj, /kek/lol/text.txt)
-    return save_tree(path,inner_files)
+    if commit:
+        return save_tree(path,inner_files)
+    return
 
 """"Должно возвращать:(tree, хэш, название)"""
 
@@ -103,5 +113,3 @@ def save_tree(path,inner_files):
 #     В дереве могут хранится ссылки на блобы и ссылки на другие деревья"""
 #     with open (CVS_DIR_NAME + CVS_REPOS_INDEX, 'r') as index:
 #         with open 
-
-print('lele')
