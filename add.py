@@ -30,11 +30,32 @@ def add(path, typeof = CVS_BLOB_OBJ, dir_path = None):
     """Индекс записывается немного иначе:
     Когда добавляется папка, в индекс записываются входящие в нее файлы
     """
-    with open(index_addr, 'a', encoding = 'UTF-8') as index:
-    # деревья в индекс не записываются
-        print(f'{typeof} {hash} {path} \n')
-        if not dir_path:
-            # index.write(f'{path} {hash}\n')
+    index_content = ''
+
+    with open(index_addr, 'r', encoding = 'UTF-8') as index:
+        index_content = index.readlines()
+    print("index_content before", index_content)
+    check_change = False
+    if index_content:
+        for i in index_content:
+            print('was',i)
+            file_info = i.split(' ')
+            if file_info[0] == path:
+                print ('HASH', hash)
+                file_info[1] = hash.strip()
+                check_change = True
+                index_content[index_content.index(i)]=' '.join(file_info)+'\n'
+                break
+            print('bec',i)
+    print("index_content after",index_content)
+    print(f'{path} {hash}')
+    if check_change:
+        with open(index_addr, 'w', encoding = 'UTF-8') as index:
+            print('test tut')
+            for i in index_content:
+                index.write(i)
+    else:
+        with open(index_addr, 'a', encoding = 'UTF-8') as index:
             print(f'{path} {hash}', file=index)
     return typeof, hash, path
     
@@ -85,7 +106,9 @@ def add_tree(path, commit=False):
             inner_files[fullpath] = add_tree(fullpath) # возвращается кортеж type, hash, path
         else: 
         #    print('it"s file, add file')
+            # print(fullpath)
             inner_files[fullpath] = add(fullpath) # возвращается кортеж type, hash, path (blob, 4g343gddsserthj, /kek/lol/text.txt)
+            
     if commit:
         return save_tree(path,inner_files)
     return

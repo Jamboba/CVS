@@ -2,14 +2,15 @@ import os
 import os.path as pt
 import pathlib
 import sys
-import hashlib #
+import hashlib 
 import zipfile
 
 
 
 import add
 import commit
-
+import checkout
+import log
 
 
 # TODO: Реализовать локальную систему контроля версий с базовыми операциями (init, add, commit, reset, log)
@@ -47,6 +48,9 @@ CVS_REPOS_INDEX = 'index.txt'
 CVS_DIR_OBJ_NAME = 'objects'
 CVS_DIR_TEMP = 'tmp'
 CVS_IGNORE_FILE = '.awignore.txt'
+HEAD_FILE = 'head'
+LOG_FILE = 'log'
+
 
 def init():
     """ Создает папку .aw в директории, с которой будем работать,
@@ -56,22 +60,22 @@ def init():
     os.mkdir(object_dir)
     temp_dir = pt.join(CVS_DIR_NAME,CVS_DIR_TEMP)
     os.mkdir(temp_dir)
+    head_file = pt.join(CVS_DIR_NAME,HEAD_FILE)
     ignore_adr = pt.join(CVS_DIR_NAME, CVS_IGNORE_FILE)
     index_addr = pt.join(CVS_DIR_NAME, CVS_REPOS_INDEX)
-    with open(index_addr, 'w', encoding = 'UTF-8'):
-        pass
-    with open(ignore_adr, 'w', encoding = 'UTF-8'):
-        print("initiated")
-    
+    log_file = pt.join(CVS_DIR_NAME, LOG_FILE)
+    open(index_addr,'a').close()
+    open(ignore_adr,'a').close()
+    open(head_file,'a').close()
+    open(log_file,'a').close()
+    # with open(index_addr, 'w', encoding = 'UTF-8'):
+    #     pass
+    print('initiated')
 
 def diff():
     pass
 
 def reset():
-    pass
-
-
-def log():
     pass
 
 
@@ -88,8 +92,9 @@ functions = {
     "init": init,
     "add": add.add,
     "commit": commit.commit,
+    "checkout": checkout.checkout,
     "reset": reset,
-    "log": log
+    "log": log.log
 }
 
 main()
