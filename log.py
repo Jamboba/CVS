@@ -8,7 +8,7 @@ import time
 
 CVS_DIR_NAME = '.aw'
 CVS_REPOS_INFO = 'info.txt'
-CVS_REPOS_INDEX = 'index.txt'
+CVS_REPOS_INDEX = 'index'
 CVS_DIR_OBJ_NAME = 'objects'
 CVS_BLOB_OBJ = 'blob'
 CVS_TREE_OBJ = 'tree'
@@ -18,10 +18,13 @@ ROOT_DIR = '.'
 HEAD_FILE = 'head'
 LOG_FILE = 'log'
 
-def log():
+def log(files = None):
+    #TODO: список измененных файлов между двумя коммитами
     log_file = pt.join(CVS_DIR_NAME, LOG_FILE)
     with open(log_file, 'r') as log:
         print(log.read())
+
+
 
 def add_log(commit_hash):
     """Получает полный хэш коммита, с папкой"""

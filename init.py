@@ -4,6 +4,7 @@ import pathlib
 import sys
 import hashlib 
 import zipfile
+import argparse
 
 
 
@@ -11,7 +12,8 @@ import add
 import commit
 import checkout
 import log
-
+import tag 
+import branch
 
 # TODO: Реализовать локальную систему контроля версий с базовыми операциями (init, add, commit, reset, log)
 
@@ -21,11 +23,7 @@ import log
 # TODO: Сохранение номера версии
 # TODO: Игнорирование файлов .awignore
 # TODO: diff, просматриваем файлы с одинаковым названием попарно построчно, если строки не совпадают
-"""как это работает:
-пользователь через консоль запускает программу в формате 
-awCVS [init, commit, checkout(следующий аргумент номер версии)] имя_директории, которую сохраняем
-парсим аргументы командной строки, в директории ищем папку .aw, если ее нет, то создаем, в ней адрес репозитория, 
-
+"""
 Консольная версия
 1. Реализация на основе [что-то одно]:
     Хранение файлов
@@ -35,7 +33,7 @@ awCVS [init, commit, checkout(следующий аргумент номер в�
 4. коммит изменений (commit)
 5. перемещение между версиями (checkout)
 6. просмотр лога (список изменённых файлов + время) (log)
-7. Теги (tag ???)
+7. Теги 
 8. Просмотр списка коммитов/тегов для перемещения между ними
 9. Сообщения в коммитах, в тегах
 10. Создание веток и простейшие операции с ними (без слияния)
@@ -44,12 +42,16 @@ awCVS [init, commit, checkout(следующий аргумент номер в�
 
 CVS_DIR_NAME = '.aw'
 CVS_REPOS_INFO = 'info.txt' # сюда пишется адрес репозитория? он ведь локальный!!!
-CVS_REPOS_INDEX = 'index.txt'
+CVS_REPOS_INDEX = 'index'
 CVS_DIR_OBJ_NAME = 'objects'
 CVS_DIR_TEMP = 'tmp'
-CVS_IGNORE_FILE = '.awignore.txt'
+# CVS_IGNORE_FILE = '.awignore.txt'
 HEAD_FILE = 'head'
 LOG_FILE = 'log'
+TAG_FILE = 'tag'
+REFS_DIR = 'refs'
+MASTER_REF_FILE ='master'
+
 
 
 def init():
@@ -60,14 +62,22 @@ def init():
     os.mkdir(object_dir)
     temp_dir = pt.join(CVS_DIR_NAME,CVS_DIR_TEMP)
     os.mkdir(temp_dir)
+    refs_dir = pt.join(CVS_DIR_NAME,REFS_DIR)
+    os.mkdir(refs_dir)
+    master_ref = pt.join(CVS_DIR_NAME, REFS_DIR, MASTER_REF_FILE)
     head_file = pt.join(CVS_DIR_NAME,HEAD_FILE)
-    ignore_adr = pt.join(CVS_DIR_NAME, CVS_IGNORE_FILE)
-    index_addr = pt.join(CVS_DIR_NAME, CVS_REPOS_INDEX)
+    # ignore_adr = pt.join(CVS_DIR_NAME, CVS_IGNORE_FILE)
+    index_file = pt.join(CVS_DIR_NAME, CVS_REPOS_INDEX)
     log_file = pt.join(CVS_DIR_NAME, LOG_FILE)
-    open(index_addr,'a').close()
-    open(ignore_adr,'a').close()
-    open(head_file,'a').close()
+    tag_file = pt.join(CVS_DIR_NAME, TAG_FILE)
+    open(index_file,'a').close()
+    # open(ignore_adr,'a').close()
+    with open(head_file, 'w') as headf:
+        print(f'ref: {master_ref}',file=headf)
+
     open(log_file,'a').close()
+    open(tag_file,'a').close()
+    open(master_ref,'a').close()
     # with open(index_addr, 'w', encoding = 'UTF-8'):
     #     pass
     print('initiated')
@@ -94,7 +104,9 @@ functions = {
     "commit": commit.commit,
     "checkout": checkout.checkout,
     "reset": reset,
-    "log": log.log
+    "log": log.log,
+    "tag": tag.tag,
+    "branch": branch.branch
 }
 
 main()

@@ -6,7 +6,7 @@ import hashlib
 
 CVS_DIR_NAME = '.aw'
 CVS_REPOS_INFO = 'info.txt'
-CVS_REPOS_INDEX = 'index.txt'
+CVS_REPOS_INDEX = 'index'
 CVS_DIR_OBJ_NAME = 'objects'
 CVS_BLOB_OBJ = 'blob'
 CVS_TREE_OBJ = 'tree'

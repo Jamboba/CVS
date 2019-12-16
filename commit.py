@@ -9,7 +9,7 @@ from log import add_log
 
 CVS_DIR_NAME = '.aw'
 CVS_REPOS_INFO = 'info.txt'
-CVS_REPOS_INDEX = 'index.txt'
+CVS_REPOS_INDEX = 'index'
 CVS_DIR_OBJ_NAME = 'objects'
 CVS_BLOB_OBJ = 'blob'
 CVS_TREE_OBJ = 'tree'
@@ -21,6 +21,8 @@ HEAD_FILE = 'head'
 
 
 def commit(tag = None):
+
+
     index_path = pt.join(CVS_DIR_NAME,CVS_REPOS_INDEX)
     commit_hash = add.hash_obj(index_path)
     commit_dir_path = pt.join(CVS_DIR_NAME,CVS_DIR_OBJ_NAME,commit_hash[0:2])
@@ -28,12 +30,16 @@ def commit(tag = None):
         os.mkdir(commit_dir_path)
     except FileExistsError as e:
         print(e)
+        return
     commit_file_path = pt.join(commit_dir_path,commit_hash[2:])
     copyfile(index_path, commit_file_path)
-    write_head(commit_hash)
+    write_ref(commit_hash)
     add_log(commit_hash)
 
-def write_head(hash):
+def write_ref(hash):
     head_file = pt.join(CVS_DIR_NAME,HEAD_FILE)
-    with open (head_file, 'w') as f:
-        f.write(hash)
+    with open (head_file, 'r') as f:
+        ref = f.read().split(' ')[1].strip()
+        # print('!', ref)
+    with open (ref, 'w') as head:
+        print(hash,file=head)
