@@ -94,24 +94,18 @@ def hash_obj(path):#(path: str) -> (str,str):
 
 def add_tree(path, commit=False):
     """Разбираем содержимое директории рекурсивно"""
- #   print('adding dir', path)
     objects = os.listdir(path)
-  #  print('objects in this dir: ',objects)
     inner_files = {}
     for obj in objects:
         fullpath = pt.join(path,obj)
-     #   print('fullpath to object: ', fullpath)
         if pt.isdir(fullpath): 
-         #   print('it"s dir')
             inner_files[fullpath] = add_tree(fullpath) # возвращается кортеж type, hash, path
         else: 
-        #    print('it"s file, add file')
-            # print(fullpath)
             inner_files[fullpath] = add(fullpath) # возвращается кортеж type, hash, path (blob, 4g343gddsserthj, /kek/lol/text.txt)
-            
+
+    print(inner_files)
     if commit:
         return save_tree(path,inner_files)
-    return
 
 """"Должно возвращать:(tree, хэш, название)"""
 
@@ -119,20 +113,11 @@ def save_tree(path,inner_files):
     """Сохраняем временный файл, который отражает содержимое директории
         Дерево должно cохранять  относительный путь файлов
     """
- #   print("Saving tree ",path," with ", inner_files)
+    print("Saving tree ",path," with ", inner_files)
     dir_name = pt.basename(path)
     temp_file = pt.join(CVS_DIR_NAME,CVS_DIR_TEMP,dir_name + TXT_EXTENSION)
     with open (temp_file, mode='w') as dir_file:
         for obj_path, info in inner_files.items():
-          #  print(obj_path, info)
             string = f'{info[0]} {info[1]} {pt.basename(obj_path)} \n'
             dir_file.write(string)
-           # print('writed these strings',f'{info[0]} {info[1]} {pt.basename(obj_path)} \n')
     return add(temp_file, typeof=CVS_TREE_OBJ, dir_path=path)
-
-
-# def write_tree():
-#     """создание объекта дерева из индекса
-#     В дереве могут хранится ссылки на блобы и ссылки на другие деревья"""
-#     with open (CVS_DIR_NAME + CVS_REPOS_INDEX, 'r') as index:
-#         with open 

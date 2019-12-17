@@ -21,8 +21,6 @@ HEAD_FILE = 'head'
 
 
 def commit(tag = None):
-
-
     index_path = pt.join(CVS_DIR_NAME,CVS_REPOS_INDEX)
     commit_hash = add.hash_obj(index_path)
     commit_dir_path = pt.join(CVS_DIR_NAME,CVS_DIR_OBJ_NAME,commit_hash[0:2])
@@ -38,8 +36,8 @@ def commit(tag = None):
 
 def write_ref(hash):
     head_file = pt.join(CVS_DIR_NAME,HEAD_FILE)
-    with open (head_file, 'r') as f:
-        ref = f.read().split(' ')[1].strip()
+    with open (head_file, 'r') as head:
+        ref = head.read().split(' ')[1].strip()
         # print('!', ref)
-    with open (ref, 'w') as head:
-        print(hash,file=head)
+    with open (ref, 'w') as rf:
+        print(hash,file=rf)
