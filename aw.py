@@ -1,5 +1,5 @@
 import os
-import os.path as pt
+import os.path
 import sys
 import argparse
 
@@ -25,15 +25,15 @@ MASTER_REF_FILE = 'master'
 def init():
     """ Создает папку .aw в директории, с которой будем работать """
     os.mkdir(CVS_DIR_NAME)
-    object_dir = pt.join(CVS_DIR_NAME, CVS_DIR_OBJ_NAME)
+    object_dir = os.path.join(CVS_DIR_NAME, CVS_DIR_OBJ_NAME)
     os.mkdir(object_dir)
-    refs_dir = pt.join(CVS_DIR_NAME, REFS_DIR)
+    refs_dir = os.path.join(CVS_DIR_NAME, REFS_DIR)
     os.mkdir(refs_dir)
-    master_ref = pt.join(CVS_DIR_NAME, REFS_DIR, MASTER_REF_FILE)
-    head_file = pt.join(CVS_DIR_NAME, HEAD_FILE)
-    index_file = pt.join(CVS_DIR_NAME, CVS_REPOS_INDEX)
-    log_file = pt.join(CVS_DIR_NAME, LOG_FILE)
-    tag_file = pt.join(CVS_DIR_NAME, TAG_FILE)
+    master_ref = os.path.join(CVS_DIR_NAME, REFS_DIR, MASTER_REF_FILE)
+    head_file = os.path.join(CVS_DIR_NAME, HEAD_FILE)
+    index_file = os.path.join(CVS_DIR_NAME, CVS_REPOS_INDEX)
+    log_file = os.path.join(CVS_DIR_NAME, LOG_FILE)
+    tag_file = os.path.join(CVS_DIR_NAME, TAG_FILE)
     open(index_file, 'a').close()
     with open(head_file, 'w') as headf:
         # print(f'ref: {master_ref}', file=headf)

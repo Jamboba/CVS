@@ -1,5 +1,5 @@
 import os
-import os.path as pt
+import os.path
 
 CVS_DIR_NAME = '.aw'
 CVS_REPOS_INDEX = 'index'
@@ -11,23 +11,23 @@ TAG_FILE = 'tag'
 
 def tag(name=None, commit_hash=None):
     """Без аргументов показывает все тэги
-        с именем - тегирует последний коммит
+        с именем - именует последний коммит
         с именем и хэшем - именует коммит соответсвующий хэшу"""
     if not name:
         show_tag()
         return
     if not commit_hash:
-        head_file = pt.join(CVS_DIR_NAME, HEAD_FILE)
+        head_file = os.path.join(CVS_DIR_NAME, HEAD_FILE)
         with open(head_file, 'r') as f:
             ref = f.read().split(' ')[1].strip()
         with open(ref, 'r') as f:
             commit_hash = f.read()[:-1]
-    tag_file = pt.join(CVS_DIR_NAME, TAG_FILE)
+    tag_file = os.path.join(CVS_DIR_NAME, TAG_FILE)
     # Проверка на то что запись уже существует
     with open(tag_file, 'a') as tag:
         # print(f'{name} {commit_hash}', file=tag)
         tag.write(f'{name} {commit_hash}\n')
-    log_file = pt.join(CVS_DIR_NAME, LOG_FILE)
+    log_file = os.path.join(CVS_DIR_NAME, LOG_FILE)
     with open(log_file, 'r') as log:
         log_list = log.readlines()
         print('log list:', log_list)
@@ -47,6 +47,6 @@ def tag(name=None, commit_hash=None):
 
 
 def show_tag():
-    tag_file = pt.join(CVS_DIR_NAME, TAG_FILE)
+    tag_file = os.path.join(CVS_DIR_NAME, TAG_FILE)
     with open(tag_file, 'r') as tagf:
         print(tagf.read())

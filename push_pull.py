@@ -1,6 +1,6 @@
 import socket
 import os
-import os.path as pt
+import os.path
 import sys
 import time
 import checkout
@@ -73,7 +73,7 @@ def pull_commit(commit, change=False):
 
 
 def download_file(file_path, socket, size):
-    # file_path = pt.join(SCRIPT_DIR, file_path)
+    # file_path = os.path.join(SCRIos.path_DIR, file_path)
     print('Загружаем файл', file_path)
     splitted_path = os.path.split(file_path)
     os.makedirs(splitted_path[0], exist_ok=True)
@@ -102,7 +102,7 @@ def push(target):
 
 def push_branch(target):
     """Отправить refs,ref указывает на коммит, коммит на файлы"""
-    branch_ref = pt.join(CVS_DIR_NAME, REFS_DIR, target)
+    branch_ref = os.path.join(CVS_DIR_NAME, REFS_DIR, target)
     send(branch_ref, creation=True)  # отправили адрес
     print(branch_ref)
     print(os.path.getsize(branch_ref))
@@ -115,7 +115,7 @@ def push_branch(target):
 
 def push_tag(tag):
     """Должен отправлять не файл тега, а тег"""
-    tag_file = pt.join(CVS_DIR_NAME, TAG_FILE)
+    tag_file = os.path.join(CVS_DIR_NAME, TAG_FILE)
     with open(tag_file, 'r') as tagf:
         tag_list = tagf.readlines()
         try:
@@ -132,7 +132,7 @@ def push_tag(tag):
 
 
 def push_commit(commit_name):
-    commit_name = pt.join(
+    commit_name = os.path.join(
                         CVS_DIR_NAME,
                         CVS_DIR_OBJ_NAME,
                         commit_name[:2],
@@ -153,7 +153,7 @@ def push_commit(commit_name):
         # print(files)
         for file in files:
             file_path = file.split(" ")[1]
-            inner_file = pt.join(
+            inner_file = os.path.join(
                                 CVS_DIR_NAME,
                                 CVS_DIR_OBJ_NAME,
                                 file_path[:2],
