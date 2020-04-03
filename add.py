@@ -52,11 +52,11 @@ def save_obj(path, file_hash):
     file_dir = arch_addr[0]
     file_dir = os.path.join(CVS_DIR_NAME, CVS_DIR_OBJ_NAME, file_dir)
     try:
-        os.mkdir(arch_addr[0])
+        os.mkdir(file_dir)
     except FileExistsError as e:
         print(e)
     with zipfile.ZipFile(
-            os.path.join(arch_addr[0], arch_addr[1]), mode='w') as zp:
+            os.path.join(file_dir, arch_addr[1]), mode='w') as zp:
         zp.write(path, arcname=splt_path[1])
 
 
