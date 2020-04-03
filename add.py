@@ -27,15 +27,20 @@ def add(path):
     change_index(path, hashed_path)
 
 
-def add_tree(path, commit=False):
+def add_tree(path):
     """Разбираем содержимое директории рекурсивно"""
-    objects = os.listdir(path)
-    for obj in objects:
-        fullpath = os.path.join(path, obj)
-        if os.path.isdir(fullpath):
-            add_tree(fullpath)
-        else:
-            add(fullpath)
+
+    dir_generator = os.walk(path)
+    while True:
+        try:
+            dir_content = next(dir_generator)
+            curr_path = dir_content[0]
+            files = dir_content[2]
+            for file in files:
+                fullpath = os.path.join(curr_path, file)
+                add(fullpath)
+        except StopIteration:
+            break
 
 
 def save_obj(path, file_hash):
@@ -44,14 +49,14 @@ def save_obj(path, file_hash):
     splt_path = list(os.path.split(path))
     arch_addr = file_hash
     arch_addr = [arch_addr[0:2], arch_addr[2:]]
-    arch_addr[0] = os.path.join(CVS_DIR_NAME, CVS_DIR_OBJ_NAME, arch_addr[0])
+    file_dir = arch_addr[0]
+    file_dir = os.path.join(CVS_DIR_NAME, CVS_DIR_OBJ_NAME, file_dir)
     try:
         os.mkdir(arch_addr[0])
     except FileExistsError as e:
         print(e)
     with zipfile.ZipFile(
-                os.path.join(arch_addr[0], arch_addr[1]),
-                mode='w') as zp:
+            os.path.join(arch_addr[0], arch_addr[1]), mode='w') as zp:
         zp.write(path, arcname=splt_path[1])
 
 
@@ -60,21 +65,23 @@ def change_index(path, hashed_path):
 
     index_addr = os.path.join(CVS_DIR_NAME, CVS_REPOS_INDEX)
     tmp_file = os.path.join(CVS_DIR_NAME, TMP_FILE)
-    is_changed = False
-    with open(index_addr, 'r') as index:
-        with open(tmp_file, 'w') as tmp:
-            while True:
-                index_line = index.readline()
-                if not index_line:
-                    break
-                index_path, index_hash = index_line.split()
-                if index_path == path:
-                    if index_hash != hashed_path:
-                        index_hash = hashed_path
-                    is_changed = True
-                index_line = ' '.join([index_path, index_hash])
-                tmp.write(index_line + ' \n')
-    if is_changed:
+    is_indexed = False
+    with open(index_addr, 'r') as index, open(tmp_file, 'w') as tmp:
+        while True:
+            index_line = index.readline()
+
+            if not index_line:
+                break
+            index_path, index_hash = index_line.split()
+
+            if index_path == path:
+
+                if index_hash != hashed_path:
+                    index_hash = hashed_path
+                is_indexed = True
+            index_line = ' '.join([index_path, index_hash])
+            tmp.write(index_line + ' \n')
+    if is_indexed:
         copyfile(tmp_file, index_addr)
     else:
         with open(index_addr, 'a') as index:
