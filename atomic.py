@@ -1,7 +1,7 @@
 import hashlib
 
 
-def hash_obj(path):
+def get_hash_for_path(path):
     """Хэшируем файл"""
     sha1 = hashlib.sha1()
     with open(path, 'rb') as f:

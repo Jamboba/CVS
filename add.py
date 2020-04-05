@@ -1,10 +1,9 @@
 import os
 import os.path
 import zipfile
-import hashlib
 from shutil import copyfile
 
-from atomic import hash_obj
+from atomic import get_hash_for_path
 
 CVS_DIR_NAME = '.aw'
 CVS_REPOS_INDEX = 'index'
@@ -20,70 +19,95 @@ def add(path):
     path = os.path.normpath(path)
 
     if os.path.isdir(path):
-        return add_tree(path)
+        return add_directory(path)
 
-    hashed_path = hash_obj(path)
-    save_obj(path, hashed_path)
-    change_index(path, hashed_path)
+    save_file(path)
+    update_index_file(path)
 
 
-def add_tree(path):
+def add_file(current_directory, file_name):
+    file_full_path = os.path.join(current_directory, file_name)
+    add(file_full_path)
+
+
+def add_directory(path):
     """Разбираем содержимое директории рекурсивно"""
 
     dir_generator = os.walk(path)
     while True:
         try:
-            dir_content = next(dir_generator)
-            curr_path = dir_content[0]
-            files = dir_content[2]
-            for file in files:
-                fullpath = os.path.join(curr_path, file)
-                add(fullpath)
+            (directory_name,
+             subdirectories,
+             files_in_current_directory) = next(dir_generator)
+
+            if len(subdirectories) > 0:
+                for directory in subdirectories:
+                    sub_directory_path = os.path.join(directory_name, directory)
+                    add_directory(sub_directory_path)
+
+            for file_name in files_in_current_directory:
+                add_file(directory_name, file_name)
         except StopIteration:
             break
 
 
-def save_obj(path, file_hash):
+def save_file(path):
     """Сохранение файла в репозитории """
 
-    splt_path = list(os.path.split(path))
-    arch_addr = file_hash
-    arch_addr = [arch_addr[0:2], arch_addr[2:]]
-    file_dir = arch_addr[0]
-    file_dir = os.path.join(CVS_DIR_NAME, CVS_DIR_OBJ_NAME, file_dir)
+    path_hash_value = get_hash_for_path(path)
+    file_directory_letters = path_hash_value[0:2]
+    file_directory_path = os.path.join(
+        CVS_DIR_NAME,
+        CVS_DIR_OBJ_NAME,
+        file_directory_letters
+    )
     try:
-        os.mkdir(file_dir)
+        os.mkdir(file_directory_path)
     except FileExistsError as e:
         print(e)
-    with zipfile.ZipFile(
-            os.path.join(file_dir, arch_addr[1]), mode='w') as zp:
-        zp.write(path, arcname=splt_path[1])
+
+    rest_hash_value_part = path_hash_value[2:]
+    zip_file_path = os.path.join(file_directory_path, rest_hash_value_part)
+    with zipfile.ZipFile(zip_file_path, mode='w') as zipped_file:
+        archive_name = os.path.basename(path)
+        zipped_file.write(path, arcname=archive_name)
 
 
-def change_index(path, hashed_path):
+# На каждый вызов этого метода идет перекопирование индекса.
+# Это ебано, потому что метод вызывается на КАЖДЫЙ новый файл при добавлении.
+# Предлагаю это переписать на генерацию нового индекса каждый раз:
+# Зашли сюда с конкретным файлом -- просто дописали файл в конец нового файла,
+# который создаем один раз.
+# Это надо еще продумать, но то, как это сейчас работает, ето пиздец
+def update_index_file(path):
     """Обновление индекса"""
+    path_hash_value = get_hash_for_path(path)
+    index_file_path = os.path.join(CVS_DIR_NAME, CVS_REPOS_INDEX)
+    tmp_file_path = os.path.join(CVS_DIR_NAME, TMP_FILE)
+    should_update = False
 
-    index_addr = os.path.join(CVS_DIR_NAME, CVS_REPOS_INDEX)
-    tmp_file = os.path.join(CVS_DIR_NAME, TMP_FILE)
-    is_indexed = False
-    with open(index_addr, 'r') as index, open(tmp_file, 'w') as tmp:
+    with open(index_file_path, 'r') as index_file, \
+            open(tmp_file_path, 'w') as tmp:
         while True:
-            index_line = index.readline()
+            index_file_row = index_file.readline()
 
-            if not index_line:
+            if not index_file_row:
                 break
-            index_path, index_hash = index_line.split()
+            indexed_file, indexed_file_hash = index_file_row.split()
 
-            if index_path == path:
-
-                if index_hash != hashed_path:
-                    index_hash = hashed_path
-                is_indexed = True
-            index_line = ' '.join([index_path, index_hash])
-            tmp.write(index_line + ' \n')
-    if is_indexed:
-        copyfile(tmp_file, index_addr)
+            if indexed_file == path:
+                if indexed_file_hash != path_hash_value:
+                    indexed_file_hash = path_hash_value
+                    index_file_row = ' '.join([
+                        indexed_file,
+                        indexed_file_hash,
+                        '\n'
+                    ])
+                should_update = True
+            tmp.write(index_file_row)
+    if should_update:
+        copyfile(tmp_file_path, index_file_path)
     else:
-        with open(index_addr, 'a') as index:
-            index.write(f'{path} {hashed_path}\n')
-    os.remove(tmp_file)
+        with open(index_file_path, 'a') as index:
+            index.write(f'{path} {path_hash_value}\n')
+    os.remove(tmp_file_path)

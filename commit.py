@@ -2,7 +2,7 @@ import os
 import os.path
 from shutil import copyfile
 
-from atomic import hash_obj
+from atomic import get_hash_for_path
 from log import add_log
 
 CVS_DIR_NAME = '.aw'
@@ -16,7 +16,7 @@ HEAD_FILE = 'head'
 
 def commit(tag=None):
     index_path = os.path.join(CVS_DIR_NAME, CVS_REPOS_INDEX)
-    commit_hash = hash_obj(index_path)
+    commit_hash = get_hash_for_path(index_path)
     commit_dir_path = os.path.join(CVS_DIR_NAME, CVS_DIR_OBJ_NAME, commit_hash[0:2])
     try:
         os.mkdir(commit_dir_path)
