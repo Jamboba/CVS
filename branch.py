@@ -1,22 +1,16 @@
 import os
-import os.path as pt
+import os.path
 import pathlib
 import sys
 from shutil import copyfile
 
-CVS_DIR_NAME = '.aw'
-CVS_REPOS_INDEX = 'index'
-CVS_DIR_OBJ_NAME = 'objects'
-HEAD_FILE = 'head'
-LOG_FILE = 'log'
-TAG_FILE = 'tag'
-REFS_DIR = 'refs'
-ROOT_DIR = '.'
+from constants import *
 
 
 def branch(name):
-    head_file = pt.join(CVS_DIR_NAME, HEAD_FILE)
+    head_file = os.path.join(MAIN_DIR_NAME, HEAD_FILE)
     with open(head_file, 'r') as f:
-        ref = f.read().split(' ')[1].strip()
-    ref_new_branch = pt.join(CVS_DIR_NAME, REFS_DIR, name)
+        head_file_content = f.read()
+        _, ref = head_file_content.split().strip()
+    ref_new_branch = os.path.join(MAIN_DIR_NAME, REFS_DIR, name)
     copyfile(ref, ref_new_branch)

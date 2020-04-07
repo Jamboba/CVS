@@ -3,6 +3,7 @@ import os.path
 import sys
 import argparse
 
+import init
 import add
 import commit
 import checkout
@@ -11,37 +12,6 @@ import tag
 import branch
 import reset
 import push_pull
-
-CVS_DIR_NAME = '.aw'
-CVS_REPOS_INDEX = 'index'
-CVS_DIR_OBJ_NAME = 'objects'
-HEAD_FILE = 'head'
-LOG_FILE = 'log'
-TAG_FILE = 'tag'
-REFS_DIR = 'refs'
-MASTER_REF_FILE = 'master'
-
-
-def init():
-    """ Создает папку .aw в директории, с которой будем работать """
-    os.mkdir(CVS_DIR_NAME)
-    object_dir = os.path.join(CVS_DIR_NAME, CVS_DIR_OBJ_NAME)
-    os.mkdir(object_dir)
-    refs_dir = os.path.join(CVS_DIR_NAME, REFS_DIR)
-    os.mkdir(refs_dir)
-    master_ref = os.path.join(CVS_DIR_NAME, REFS_DIR, MASTER_REF_FILE)
-    head_file = os.path.join(CVS_DIR_NAME, HEAD_FILE)
-    index_file = os.path.join(CVS_DIR_NAME, CVS_REPOS_INDEX)
-    log_file = os.path.join(CVS_DIR_NAME, LOG_FILE)
-    tag_file = os.path.join(CVS_DIR_NAME, TAG_FILE)
-    open(index_file, 'a').close()
-    with open(head_file, 'w') as headf:
-        # print(f'ref: {master_ref}', file=headf)
-        headf.write(f'ref: {master_ref}')
-    open(log_file, 'a').close()
-    open(tag_file, 'a').close()
-    open(master_ref, 'a').close()
-    print('initiated')
 
 
 def main():
@@ -52,7 +22,7 @@ def main():
 
 
 functions = {
-    "init": init,
+    "init": init.init,
     "add": add.add,
     "commit": commit.commit,
     "checkout": checkout.checkout,

@@ -6,9 +6,9 @@ import time
 import checkout
 
 SERVER_ADDR = ('DESKTOP-MTLNPN0', 1337)
-CVS_DIR_NAME = '.aw'
-CVS_REPOS_INDEX = 'index'
-CVS_DIR_OBJ_NAME = 'objects'
+MAIN_DIR_NAME = '.aw'
+REPOS_INDEX = 'index'
+OBJ_DIR_NAME = 'objects'
 HEAD_FILE = 'head'
 LOG_FILE = 'log'
 TAG_FILE = 'tag'
@@ -41,7 +41,7 @@ def pull_tag(tag, change=False):
     client_socket.connect(SERVER_ADDR)
     client_socket.send(bytes(PULL_TAG_CODE, 'UTF-8') + bytes(tag, 'UTF-8'))
     # client_socket.settimeout(5)
-    
+
 
 def pull_branch(branch, change=False):
     pass
@@ -102,7 +102,8 @@ def push(target):
 
 def push_branch(target):
     """Отправить refs,ref указывает на коммит, коммит на файлы"""
-    branch_ref = os.path.join(CVS_DIR_NAME, REFS_DIR, target)
+
+    branch_ref = os.path.join(MAIN_DIR_NAME, REFS_DIR, target)
     send(branch_ref, creation=True)  # отправили адрес
     print(branch_ref)
     print(os.path.getsize(branch_ref))
@@ -115,7 +116,8 @@ def push_branch(target):
 
 def push_tag(tag):
     """Должен отправлять не файл тега, а тег"""
-    tag_file = os.path.join(CVS_DIR_NAME, TAG_FILE)
+
+    tag_file = os.path.join(MAIN_DIR_NAME, TAG_FILE)
     with open(tag_file, 'r') as tagf:
         tag_list = tagf.readlines()
         try:
@@ -133,8 +135,8 @@ def push_tag(tag):
 
 def push_commit(commit_name):
     commit_name = os.path.join(
-                        CVS_DIR_NAME,
-                        CVS_DIR_OBJ_NAME,
+                        MAIN_DIR_NAME,
+                        OBJ_DIR_NAME,
                         commit_name[:2],
                         commit_name[2:]).strip()
     send(commit_name, creation=True)  # отправили адрес
@@ -154,8 +156,8 @@ def push_commit(commit_name):
         for file in files:
             file_path = file.split(" ")[1]
             inner_file = os.path.join(
-                                CVS_DIR_NAME,
-                                CVS_DIR_OBJ_NAME,
+                                MAIN_DIR_NAME,
+                                OBJ_DIR_NAME,
                                 file_path[:2],
                                 file_path[2:]).strip()
             send(inner_file, creation=True)
@@ -172,6 +174,7 @@ def push_commit(commit_name):
 
 def send(data, creation=False):
     """Отправляем файл на сервер"""
+
     client_socket = socket.socket()
     client_socket.connect(SERVER_ADDR)
     # print(file)

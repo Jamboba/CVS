@@ -7,10 +7,10 @@ import time
 # socket.gethostname()
 ADDR = ('', 1337)
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-CVS_DIR_NAME = os.path.join(SCRIPT_DIR, '.aw')
+MAIN_DIR_NAME = os.path.join(SCRIPT_DIR, '.aw')
 CVS_ORIGINAL_DIR_NAME = '.aw'
-CVS_REPOS_INDEX = 'index'
-CVS_DIR_OBJ_NAME = 'objects'
+REPOS_INDEX = 'index'
+OBJ_DIR_NAME = 'objects'
 HEAD_FILE = 'head'
 LOG_FILE = 'log'
 TAG_FILE = 'tag'
@@ -25,14 +25,15 @@ PULL_TAG_CODE = '11'
 def dir_init():
     """ Создает папку .aw в директории, с которой будем работать,
         записываем  """
-    os.mkdir(CVS_DIR_NAME)
-    object_dir = pt.join(CVS_DIR_NAME, CVS_DIR_OBJ_NAME)
+
+    os.mkdir(MAIN_DIR_NAME)
+    object_dir = pt.join(MAIN_DIR_NAME, OBJ_DIR_NAME)
     os.mkdir(object_dir)
-    refs_dir = pt.join(CVS_DIR_NAME, REFS_DIR)
+    refs_dir = pt.join(MAIN_DIR_NAME, REFS_DIR)
     os.mkdir(refs_dir)
-    master_ref = pt.join(CVS_DIR_NAME, REFS_DIR, MASTER_REF_FILE)
-    index_file = pt.join(CVS_DIR_NAME, CVS_REPOS_INDEX)
-    tag_file = pt.join(CVS_DIR_NAME, TAG_FILE)
+    master_ref = pt.join(MAIN_DIR_NAME, REFS_DIR, MASTER_REF_FILE)
+    index_file = pt.join(MAIN_DIR_NAME, REPOS_INDEX)
+    tag_file = pt.join(MAIN_DIR_NAME, TAG_FILE)
     open(index_file, 'a').close()
     open(tag_file, 'a').close()
     open(master_ref, 'a').close()
@@ -40,6 +41,7 @@ def dir_init():
 
 
 def server_init():
+
     server_socket = socket.create_server(
                                     ADDR,
                                     family=socket.AF_INET)
@@ -70,7 +72,7 @@ def server_init():
 
 
 def save_tag(tag_commit):
-    tag_file = pt.join(CVS_DIR_NAME, TAG_FILE)
+    tag_file = pt.join(MAIN_DIR_NAME, TAG_FILE)
     # open(tag_file, 'a').close()
     tag_commit = tag_commit.split(' ')
     with open(tag_file, 'a') as tag:
@@ -81,14 +83,15 @@ def save_tag(tag_commit):
 def send_file(commit_name, socket):
     """Разбирается что переданно,
     пересылает файлы"""
+
     commit_path = pt.join(
-                        CVS_DIR_NAME,
-                        CVS_DIR_OBJ_NAME,
+                        MAIN_DIR_NAME,
+                        OBJ_DIR_NAME,
                         commit_name[:2],
                         commit_name[2:]).strip()
     commit_sending_name = pt.join(
                         CVS_ORIGINAL_DIR_NAME,
-                        CVS_DIR_OBJ_NAME,
+                        OBJ_DIR_NAME,
                         commit_name[:2],
                         commit_name[2:]).strip()
     send(commit_sending_name, socket, creation=True)  # отправили адрес
@@ -113,13 +116,13 @@ def send_file(commit_name, socket):
             file_path = file.split(" ")[1]
             print('хеш файла', file_path)
             inner_file = pt.join(
-                                CVS_DIR_NAME,
-                                CVS_DIR_OBJ_NAME,
+                                MAIN_DIR_NAME,
+                                OBJ_DIR_NAME,
                                 file_path[:2],
                                 file_path[2:]).strip()
             inner_file_sending_name = pt.join(
                                 CVS_ORIGINAL_DIR_NAME,
-                                CVS_DIR_OBJ_NAME,
+                                OBJ_DIR_NAME,
                                 file_path[:2],
                                 file_path[2:]).strip()
             send(inner_file_sending_name, socket, creation=True)
@@ -150,7 +153,7 @@ def download_file(file_path, socket, size):
         data = conn.recv(size+2)[2:]
         # len
         file.write(data)
-    
+
     print("file_path_size", os.path.getsize(file_path))
 
     print('end')
@@ -158,6 +161,7 @@ def download_file(file_path, socket, size):
 
 def send(data, socket, creation=False):
     """Отправляем файл на сервер"""
+
     # client_socket = socket.socket()
     # client_socket.connect(SERVER_ADDR)
     # print(file)
@@ -177,13 +181,13 @@ server_init()
 
 
 # commit_name = pt.join(
-#                     CVS_DIR_NAME,
-#                     CVS_DIR_OBJ_NAME,
+#                     MAIN_DIR_NAME,
+#                     OBJ_DIR_NAME,
 #                     commit_name[:2],
 #                     commit_name[2:]).strip()
 # commit_sending_name = pt.join(
 #                     CVS_ORIGINAL_DIR_NAME,
-#                     CVS_DIR_OBJ_NAME,
+#                     OBJ_DIR_NAME,
 #                     commit_name[:2],
 #                     commit_name[2:]).strip()
 #     # send(commit_sending_name, socket, creation=True)  # отправили адрес
