@@ -7,8 +7,8 @@ from atomic import hash_obj, add_log, write_ref
 
 
 def commit(tag=None):
-    index_path = os.path.join(MAIN_DIR_NAME, REPOS_INDEX)
-    commit_hash = hash_obj(index_path)
+    # index_file = os.path.join(MAIN_DIR_NAME, REPOS_INDEX)
+    commit_hash = hash_obj(index_file)
     commit_dir_path = os.path.join(
             MAIN_DIR_NAME,
             OBJ_DIR_NAME,
@@ -20,6 +20,6 @@ def commit(tag=None):
         print(e)
         return
     commit_file_path = os.path.join(commit_dir_path, commit_hash[2:])
-    copyfile(index_path, commit_file_path)
+    copyfile(index_file, commit_file_path)
     write_ref(commit_hash)
     add_log(commit_hash)

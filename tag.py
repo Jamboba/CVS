@@ -1,5 +1,5 @@
-import os
-import os.path
+# import os
+# import os.path
 
 from constants import *
 
@@ -13,16 +13,13 @@ def tag(name=None, commit_hash=None):
         show_tag()
         return
     if not commit_hash:
-        head_file = os.path.join(MAIN_DIR_NAME, HEAD_FILE)
         with open(head_file, 'r') as f:
             ref = f.read().split(' ')[1].strip()
         with open(ref, 'r') as f:
             commit_hash = f.read()[:-1]
-    tag_file = os.path.join(MAIN_DIR_NAME, TAG_FILE)
     # Проверка на то что запись уже существует
     with open(tag_file, 'a') as tag:
         tag.write(f'{name} {commit_hash}\n')
-    log_file = os.path.join(MAIN_DIR_NAME, LOG_FILE)
     with open(log_file, 'r') as log:
         log_list = log.readlines()
         tagging_commit = list(filter(
@@ -35,6 +32,5 @@ def tag(name=None, commit_hash=None):
 
 
 def show_tag():
-    tag_file = os.path.join(MAIN_DIR_NAME, TAG_FILE)
     with open(tag_file, 'r') as tagf:
         print(tagf.read())

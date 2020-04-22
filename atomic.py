@@ -3,7 +3,7 @@ import os
 import os.path
 import time
 
-from constants import *
+from .constants import *
 
 
 """Функции, которые используется несколькими модулями"""
@@ -43,12 +43,12 @@ def update_catalog_and_index(commit_name):
                 commit_name[2:]
                 )
     with open(commit_file_path, 'r') as commit:
-        update_index = []
+        updated_index = []
         while True:
             file_info = commit.readline()
             if not file_info:
                 break
-            update_index.append(file_info)
+            updated_index.append(file_info)
             file_info = file_info.split(' ')
             filename = pt.split(file_info[0])
             zip_path = pt.join(
@@ -60,21 +60,21 @@ def update_catalog_and_index(commit_name):
             target_path = pt.join(ROOT_DIR, filename[0])
             with zipfile.ZipFile(zip_path, mode='r') as zp:
                 zp.extract(filename[1], target_path)
-    index_path = pt.join(MAIN_DIR_NAME, REPOS_INDEX)
-    diff(commit_file_path, index_path)
-    print('update_index', update_index)
-    with open(index_path, 'w') as index:
-        for i in update_index:
+    index_file = pt.join(MAIN_DIR_NAME, REPOS_INDEX)
+    diff(commit_file_path, index_file)
+    print('updated_index', updated_index)
+    with open(index_file, 'w') as index:
+        for i in updated_index:
             index.write(i)
 
 
-def diff(new_index_path, old_index_path):
+def diff(new_index_file, old_index_file):
     """Расчитывает разницу между старым и новым индексом"""
 
-    with open(new_index_path) as new:
+    with open(new_index_file) as new:
         files_new = {i.split(' ')[0] for i in new.readlines() if i != '\n'}
     print('new_index', files_new)
-    with open(old_index_path) as old:
+    with open(old_index_file) as old:
         files_old = {i.split(' ')[0] for i in old.readlines() if i != '\n'}
     print('old_index', files_old)
 
