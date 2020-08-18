@@ -8,12 +8,7 @@ import types
 import errno
 import re
 
-# from .. import atomic
-# from ..constants import *
-# from . import init
-# from atomic import add_log
-# from constants import *
-# socket.gethostname()
+
 ADDR = ('', 1337)
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 MAIN_DIR_NAME = os.path.join(SCRIPT_DIR, '.aw')
@@ -25,18 +20,15 @@ LOG_FILE = 'log'
 TAG_FILE = 'tag'
 REFS_DIR = 'refs'
 MASTER_REF_FILE = 'master'
-# FILE_PATH_CODE = '01'
-# PULL_COMMIT_CODE = '10'
-# PUSH_TAG_CODE = '02'
-# PULL_TAG_CODE = '11'
+
 TMP_FILE = 'tmp.txt'
 tmp_file = os.path.join(MAIN_DIR_NAME, TMP_FILE)
 
-parser_regex = re.compile('(?:^save |^push )')
+parser_regex = re.compile('(?:^save |^load |^stop)')
 
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 1337
-HEADER_SIZE = 1024
+HEADER_SIZE = 49
 
 
 requests_and_answers = dict()
@@ -44,13 +36,12 @@ asking_selector = selectors.DefaultSelector()
 
 
 def dir_init():
-
-    # В проэкте aw существует отдельный модуль init.py
-    # который позволяет инициализировать директорию точно так же
-    # при выставленном флаге is_CVS=false
     """ Создает папку .aw в директории, с которой будем работать,
         записываем  """
 
+    if os.path.exists(MAIN_DIR_NAME):
+        print('initiated already')
+        return
     os.mkdir(MAIN_DIR_NAME)
     object_dir = pt.join(MAIN_DIR_NAME, OBJ_DIR_NAME)
     os.mkdir(object_dir)
@@ -64,25 +55,21 @@ def dir_init():
     open(master_ref_file, 'a').close()
     log_file = pt.join(MAIN_DIR_NAME, LOG_FILE)
     open(log_file, 'a').close()
+    open(tmp_file, 'a').close()
     print('initiated')
 
 
 def create_listening_socket(host, port):
-    """Создаем сокет, слушающий клиента,
-    создается один раз!
-    """
+    """Создаем сокет, слушающий клиента"""
 
-    # global DEFAULT_PORT
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind((host, port))
     server_socket.listen(50)
     print('server socket listening on', (DEFAULT_HOST, DEFAULT_PORT))
     server_socket.setblocking(False)
     data = types.SimpleNamespace(
-        # addr=addr,
         is_server_socket=True)
     asking_selector.register(server_socket, selectors.EVENT_READ, data=data)
-    # DEFAULT_PORT += 1
 
 
 def wrapper_for_accept_connections(server_socket):
@@ -93,7 +80,9 @@ def wrapper_for_accept_connections(server_socket):
     conn.setblocking(False)
     data = types.SimpleNamespace(
         addr=addr,
-        is_server_socket=False)
+        is_server_socket=False,
+        socket_file=conn.makefile('rw', newline=''))
+    # kek = types.SimpleNamespace()
     events = selectors.EVENT_READ
     asking_selector.register(conn, events, data=data)
 
@@ -108,83 +97,119 @@ def main():
             if key.data.is_server_socket:
                 wrapper_for_accept_connections(key.fileobj)
             else:
-                if mask & selectors.EVENT_READ:
-                    read_from_socket(key.fileobj)
-                # if mask & selectors.EVENT_WRITE:
-                #     write_to_socket(key)
+                if read_write(key.data.socket_file):
+                    key.fileobj.close()
+                    asking_selector.unregister(key.fileobj)
+                    continue
 
 
-def read_from_socket(sock, size=False, file_path=tmp_file):
-    """Читаем сообщение. Это может быть запрос(pull, push).
+def read_write(source_file, size=HEADER_SIZE, destination_file=False):
+    """Читаем сообщение. Это может быть запрос(save, load).
     Это может быть файл.
     нужно разобраться что передано, и отработать в соответствии с сообщением
+    Должен использоватся и на сервере и на клиенте.
+    source/destination - файловый дескриптор
     """
 
-    if file_path != tmp_file:
-        file_path = os.path.join(SCRIPT_DIR, file_path)
-        splitted_path = os.path.split(file_path)
-        os.makedirs(splitted_path[0], exist_ok=True)
-    with open(file_path, mode='wb') as tmp:
-        if not size:
-            size = HEADER_SIZE
-        while True:
-            try:
-                received_data = sock.recv(size)
-                tmp.write(received_data)
-                if len(received_data) < size:
-                    print('some data received from ', sock.getpeername())
-                    break
-            except socket.error as exc:
-                if exc.errno == errno.WSAECONNRESET:
-                    asking_selector.unregister(sock)
-                    print('closing connection with:\n', sock.getpeername())
-                    sock.close()
-                    break
-                print('OTHER sockerr:', exc)
-    if file_path == tmp_file:
-        parse_message(file_path, sock)
-    # return incoming_message
+    if not destination_file:
+        destination_file = open(tmp_file, mode='w', newline='')
+    while True:
+        try:
+            received_data = source_file.read(size)
+            if not received_data:
+                continue
+            # received_data = received_data.replace('\n\n', '\n')
+            print(received_data, file=destination_file, flush=True, end='')
+            a = len(received_data)
+            if len(received_data) <= size:
+                print(bytes(received_data, encoding='utf-8'))
+                print('some data received from somewere')
+                break
+        except Exception as exc:
+            print('EXC:', exc)
+    try:
+        if destination_file.name == tmp_file:
+            return parse_message(tmp_file, source_file)
+    except AttributeError as e:
+        print('Its totally fine')
+    # destination_file.close()
+    # source_file.close()
 
 
-def parse_message(tmp_file, socket):
+def parse_message(tmp_file, socket_file):
     """Разбор сообщения, перерегистрация сокета с новыми данными
     Может быть строки вида:
-    Перед любым сообщением идет его размер
-    pull {commit} # регистрируем сокет на запись с номером коммита
-    save {file_path} {file_size \\n} {file_content}
+    # Перед файлом его размер
+    load {file_hash} # регистрируем сокет на запись с номером коммита
+    save {file_hash} {file_size \\n} {file_content}
     """
 
-    with open(tmp_file, 'r') as tmp:
+    with open(tmp_file, 'r', newline='') as tmp:
         first_string = tmp.readline()
         type_of_message = re.search(parser_regex, first_string)[0]
+
+        if type_of_message == 'stop':
+            socket_file.close()
+            print('we finished')
+            return True
+
         file_hash = first_string.split()[1]
 
-    if type_of_message == 'pull ':
-        data = types.SimpleNamespace(commit_name=file_hash)
-        asking_selector.modify(socket,
-                               selectors.EVENT_WRITE,
-                               data=data)
-        send_file(commit_name)
+    if type_of_message == 'load ':
+        send_commit(socket_file, file_hash)
+        send_header(socket_file, 'stop')
+        socket_file.close()
+        return True
+
     if type_of_message == 'save ':
+        file_path = get_path_from_hash(file_hash)
         file_size = int(first_string.split()[2])
-        file_path = os.path.join(
-                        MAIN_DIR_NAME,
-                        OBJ_DIR_NAME,
-                        file_hash[:2],
-                        file_hash[2:]).strip()
-        read_from_socket(socket, file_size, file_path)
-        # Должен быть переиспользован read_from_socket
+        splitted_path = os.path.split(file_path)
+        os.makedirs(splitted_path[0], exist_ok=True)
+        with open(file_path, mode='w', newline='') as destination_file:
+            read_write(socket_file, file_size, destination_file)
 
 
-def write_to_socket(key):
-    """Откуда знаем что писать?
-    parse_message должен разобратся, писать или читать, и передать эту информацию дальше
-    , например через data в селекторе"""
-    pass
+def send_commit(socket_file, source_hash):
+    """Отправить файл индекса, открыть его,
+    отправить все файлы, которые лежат внутри"""
+    index_path, index_size = get_file_info(source_hash)
+    send_header(socket_file, 'load', source_hash, index_size)
+    source_fileobj = open(index_path, 'r', newline='')
+    read_write(source_fileobj, index_size, socket_file)
+
+    with open(index_path, 'r', newline='') as index:
+        for index_line in index:
+            _, file_hash = index_line.split(" ")
+            file_path, file_size = get_file_info(file_hash)
+            send_header(socket_file, 'load', file_hash,  file_size)
+            with open(file_path, 'r', newline='') as inner_fileobj:
+                read_write(inner_fileobj, file_size, socket_file)
 
 
-def server_init_new():
-    create_listening_socket()
+def get_file_info(file_hash):
+    file_path = get_path_from_hash(file_hash)
+    file_size = os.path.getsize(file_path)
+    return file_path, file_size
+
+
+def send_header(socket_file, command, source_hash=None, file_size=None):
+    message_list = [command]
+    if source_hash:
+        message_list.append(source_hash.strip())
+    if file_size:
+        message_list.append(str(file_size))
+    header_message = ' '.join(message_list)
+    print('отправляем заголовок', header_message)
+    print(header_message, file=socket_file, flush=True, end='')
+
+
+def get_path_from_hash(file_hash):
+    return os.path.join(
+                MAIN_DIR_NAME,
+                OBJ_DIR_NAME,
+                file_hash[:2],
+                file_hash[2:]).strip()
 
 
 main()
@@ -289,12 +314,9 @@ main()
 #     print('sent!')
 
 
-
-
 #     print("file_path_size", os.path.getsize(file_path))
 
 #     print('end')
-
 
 # def send(data, socket, creation=False):
 #     """Отправляем файл на сервер"""

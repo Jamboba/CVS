@@ -3,7 +3,7 @@ import os
 import os.path
 import time
 
-from .constants import *
+from constants import *
 
 
 """Функции, которые используется несколькими модулями"""
