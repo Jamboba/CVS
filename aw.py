@@ -13,11 +13,6 @@ import branch
 import reset
 import push_pull
 
-
-def main():
-    functions[sys.argv[1]](*sys.argv[2:])
-
-
 functions = {
     "init": init.init,
     "add": add.add,
@@ -29,6 +24,16 @@ functions = {
     "branch": branch.branch,
     "push": push_pull.push,
     "pull": push_pull.pull,
+    "register": push_pull.register,
+    "hello": push_pull.hello,
 }
+
+
+def main():
+    try:
+        functions[sys.argv[1]](*sys.argv[2:])
+    except KeyError as e:
+        print('No such command')
+
 
 main()
